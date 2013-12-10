@@ -86,7 +86,7 @@ def main():
 
     if args.files:
         utils.subl(*args.files)
-    else:
+    elif len(sys.argv) is 1:
         if sp_path.exists():
             utils.subl(sp_path)
 

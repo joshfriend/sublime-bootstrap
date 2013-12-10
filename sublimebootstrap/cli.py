@@ -2,25 +2,22 @@
 
 import argparse
 import sys
-import os
 
 from path import path
 
 import utils
 from sublimeproject import SublimeProject
-
-
-def find_sublime_project(git_root):
-    for f in git_root.files():
-        if f.isfile():
-            if f.fnmatch('*.sublime-project'):
-                return f
-    return git_root / git_root.name + '.sublime-project'
+from __version__ import version
 
 
 def main():
     parser = argparse.ArgumentParser(description='Bootstrap app for Sublime projects.')
-    parser.add_argument('name',
+    parser.add_argument('files',
+                        nargs='*',
+                        help='Files to open in Sublime Text. If no files are given, the command will open the \
+                              the *.sublime-project of the current repo, if one exists.')
+    parser.add_argument('-f',
+                        dest='project_file',
                         action='store',
                         nargs='?',
                         default=None,
@@ -48,15 +45,16 @@ def main():
                         action='store_true',
                         default=None,
                         help='Add ignored patterns from your system gitignore file (trailing "/" in pattern assumed to be folder).')
-    parser.add_argument('--install-subl',
-                        dest='subl',
+    parser.add_argument('--open',
+                        dest='open',
                         action='store_true',
                         default=None,
-                        help='Install the "subl" command line tool.')
+                        help='Open the *.sublime-project file. (automatic if no arguments are given)')
     # parser.add_argument('--import-slickedit',
     #                     action='store',
     #                     dest='slickedit',
     #                     help='Parse a SlickEdit project file.')
+    parser.add_argument('--version', action='version', version=version)
 
     args = parser.parse_args()
 
@@ -66,11 +64,11 @@ def main():
         sys.exit(-1)
 
     # Determine where project file is located
-    if args.name:
-        sp_path = args.name
+    if args.project_file:
+        sp_path = path(args.project_file)
     else:
         # Find the path to existing project file, or use default if one does not exist
-        sp_path = find_sublime_project(git_root)
+        sp_path = path(utils.find_sublime_project(git_root))
 
     sp = SublimeProject(sp_path)
 
@@ -82,6 +80,15 @@ def main():
         sp.ignore_folders(*args.ignored_folders)
 
     sp.save()
+
+    if args.open:
+        utils.subl(sp_path)
+
+    if args.files:
+        utils.subl(*args.files)
+    else:
+        if sp_path.exists():
+            utils.subl(sp_path)
 
 
 if __name__ == '__main__':

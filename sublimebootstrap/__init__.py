@@ -1,4 +1,4 @@
 #!/usr/bin/env python
 
-PROJECT = 'Sublime Bootstrap'
+PROJECT = 'sublimebootstrap'
 CLI = 'subl'
